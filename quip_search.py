@@ -12,7 +12,7 @@ import httpx
 @click.option('--body', '-b', is_flag=True, help='otherwise, only search titles')
 def main(query: str, limit: int, body: bool) -> None:
 	"""searches quip"""
-	current_dir = pathlib.Path(__file__).parent
+	current_dir = pathlib.Path(__file__).resolve().parent
 	try:
 		access_token = (current_dir / 'access_token').read_text().rstrip()
 	except FileNotFoundError:
