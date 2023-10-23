@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
+import json
 import pathlib
 
 import click
@@ -10,7 +11,8 @@ import httpx
 @click.argument('query', nargs=-1, required=True)
 @click.option('--limit', '-l', type=int, default=50)
 @click.option('--body', '-b', is_flag=True, help='otherwise, only search titles')
-def main(query: str, limit: int, body: bool) -> None:
+@click.option('--alfred', is_flag=True, help='format for alfred script filter')
+def main(query: str, limit: int, body: bool, alfred: bool) -> None:
 	"""searches quip"""
 	current_dir = pathlib.Path(__file__).resolve().parent
 	try:
@@ -26,13 +28,27 @@ def main(query: str, limit: int, body: bool) -> None:
 			params={'query': query, 'count': limit, 'only_match_titles': not body})
 	response.raise_for_status()
 
-	for data in response.json():
-		thread = data['thread']
-		click.secho(thread['title'], fg='green')
-		click.echo('\tcreated: ' + datetime.datetime.fromtimestamp(thread['created_usec'] / 1000000).isoformat())
-		click.echo('\tupdated: ' + datetime.datetime.fromtimestamp(thread['updated_usec'] / 1000000).isoformat())
-		click.secho('\t' + thread['link'], fg='bright_black')
-		click.echo()
+	if alfred:
+		items = []
+		for data in response.json():
+			thread = data['thread']
+			items.append({
+				'title': thread['title'],
+				'subtitle': f'updated: {format_usec(thread["updated_usec"])}',
+				'arg': thread['link'],
+			})
+		click.echo(json.dumps({'items': items}))
+	else:
+		for data in response.json():
+			thread = data['thread']
+			click.secho(thread['title'], fg='green')
+			click.echo('\tcreated: ' + format_usec(thread['created_usec']))
+			click.echo('\tupdated: ' + format_usec(thread['updated_usec']))
+			click.secho('\t' + thread['link'], fg='bright_black')
+			click.echo()
+
+def format_usec(ts_usec: int) -> str:
+	return datetime.datetime.fromtimestamp(ts_usec / 1000000).isoformat()
 
 if __name__ == '__main__':
 	main()
