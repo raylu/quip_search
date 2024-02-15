@@ -12,7 +12,7 @@ import httpx
 @click.option('--limit', '-l', type=int, default=50)
 @click.option('--body', '-b', is_flag=True, help='otherwise, only search titles')
 @click.option('--alfred', is_flag=True, help='format for alfred script filter')
-def main(query: str, limit: int, body: bool, alfred: bool) -> None:
+def main(query: tuple[str], limit: int, body: bool, alfred: bool) -> None:
 	"""searches quip"""
 	current_dir = pathlib.Path(__file__).resolve().parent
 	try:
@@ -25,7 +25,7 @@ def main(query: str, limit: int, body: bool, alfred: bool) -> None:
 	# https://quip.com/dev/automation/documentation/current#operation/searchForThreads
 	response = httpx.get('https://platform.quip.com/1/threads/search',
 			headers={'Authorization': 'Bearer ' + access_token},
-			params={'query': query, 'count': limit, 'only_match_titles': not body})
+			params={'query': ' '.join(query), 'count': limit, 'only_match_titles': not body})
 	response.raise_for_status()
 
 	if alfred:
