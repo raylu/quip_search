@@ -43,8 +43,12 @@ def main(query: tuple[str], limit: int, body: bool, alfred: bool) -> None:
 	else:
 		for page in results:
 			click.secho(page['content']['title'], fg='green')
-			wrapped = '\n'.join(textwrap.wrap(page['excerpt'], shutil.get_terminal_size().columns - 8))
-			click.echo(textwrap.indent(wrapped, '\t'))
+			excerpt, _, start = page['excerpt'].partition('@@@hl@@@')
+			if len(start) > 0:
+				highlight, _, rest = start.partition('@@@endhl@@@')
+				excerpt += click.style(highlight, fg='cyan') + rest
+			excerpt = '\n'.join(textwrap.wrap(excerpt, shutil.get_terminal_size().columns - 8))
+			click.echo(textwrap.indent(excerpt, '\t'))
 			click.secho('\tupdated: ' + page['friendlyLastModified'], fg='blue')
 			click.secho('\thttps://benchling.atlassian.net/wiki' + page['url'], fg='bright_black')
 			click.echo()
