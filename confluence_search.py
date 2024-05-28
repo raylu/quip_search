@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import base64
 import datetime
 import json
 import shutil
+import struct
 import subprocess
 import textwrap
 
@@ -34,10 +36,13 @@ def main(query: tuple[str], limit: int, body: bool, alfred: bool) -> None:
 	if alfred:
 		items = []
 		for page in results:
+			page_id = int(page['content']['id'])
+			# stolen from https://confluencer.readthedocs.io/en/latest/_modules/confluencer/api.html
+			tiny_id = base64.b64encode(struct.pack('<L', page_id).rstrip(b'\0'), altchars=b'_-').rstrip(b'=')
 			items.append({
 				'title': page['content']['title'],
-				'subtitle': page['excerpt'],
-				'arg': page['url'],
+				'subtitle': page['excerpt'].replace('\n', '  '),
+				'arg': 'https://benchling.atlassian.net/wiki/x/' + tiny_id.decode('ascii'),
 			})
 		click.echo(json.dumps({'items': items}))
 	else:
